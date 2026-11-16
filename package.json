@@ -1,0 +1,16 @@
+{
+  "name": "polyglot-persistence",
+  "version": "1.0.0",
+  "description": "Projects and Tasks CRUD with SQLite (SQL) and MongoDB (NoSQL)",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "express": "^5.1.0",
+    "mongodb": "^6.20.0"
+  }
+}

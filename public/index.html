@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Projects and Tasks: SQL and NoSQL</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0 auto; padding: 12px; max-width: 1100px; }
+    .columns { display: flex; flex-wrap: wrap; gap: 16px; }
+    section { flex: 1 1 320px; border: 1px solid #999; padding: 12px; min-width: 0; }
+    fieldset { margin-bottom: 10px; }
+    input, select, button { font-size: 16px; margin: 3px 0; max-width: 100%; }
+    input { width: 100%; box-sizing: border-box; }
+    pre { background: #eee; padding: 8px; white-space: pre-wrap; word-break: break-word; max-height: 300px; overflow: auto; }
+  </style>
+</head>
+<body>
+  <h1>Projects and Tasks</h1>
+  <p>Same data in SQLite (tables) and MongoDB (one document with embedded tasks).
+     Open DevTools, Network tab, to see the status codes.</p>
+
+  <div class="columns">
+    <section>
+      <h2>SQL (SQLite)</h2>
+      <fieldset>
+        <legend>Project</legend>
+        <input id="sqlProjectId" placeholder="project id (for read, update, delete)">
+        <input id="sqlName" placeholder="name" maxlength="100">
+        <input id="sqlDesc" placeholder="description" maxlength="500">
+        <button onclick="call('POST', '/api/sql/projects', sqlProject())">Create</button>
+        <button onclick="call('GET', '/api/sql/projects')">List</button>
+        <button onclick="call('GET', '/api/sql/projects/' + val('sqlProjectId'))">Read (with tasks)</button>
+        <button onclick="call('PUT', '/api/sql/projects/' + val('sqlProjectId'), sqlProject())">Update</button>
+        <button onclick="call('DELETE', '/api/sql/projects/' + val('sqlProjectId'))">Delete</button>
+      </fieldset>
+      <fieldset>
+        <legend>Task</legend>
+        <input id="sqlTaskId" placeholder="task id (for read, update, delete)">
+        <input id="sqlTaskProject" placeholder="project_id (try 9999 for the FK error)">
+        <input id="sqlTitle" placeholder="title" maxlength="200">
+        <select id="sqlStatus"><option>todo</option><option>doing</option><option>done</option></select>
+        <button onclick="call('POST', '/api/sql/tasks', sqlTask())">Create</button>
+        <button onclick="call('GET', '/api/sql/tasks')">List</button>
+        <button onclick="call('GET', '/api/sql/tasks/' + val('sqlTaskId'))">Read</button>
+        <button onclick="call('PUT', '/api/sql/tasks/' + val('sqlTaskId'), sqlTask())">Update</button>
+        <button onclick="call('DELETE', '/api/sql/tasks/' + val('sqlTaskId'))">Delete</button>
+      </fieldset>
+    </section>
+
+    <section>
+      <h2>NoSQL (MongoDB)</h2>
+      <fieldset>
+        <legend>Project document</legend>
+        <input id="mProjectId" placeholder="project _id (for read, update, delete)">
+        <input id="mName" placeholder="name" maxlength="100">
+        <input id="mDesc" placeholder="description" maxlength="500">
+        <button onclick="call('POST', '/api/mongo/projects', mProject())">Create</button>
+        <button onclick="call('GET', '/api/mongo/projects')">List</button>
+        <button onclick="call('GET', '/api/mongo/projects/' + val('mProjectId'))">Read (one query)</button>
+        <button onclick="call('PUT', '/api/mongo/projects/' + val('mProjectId'), mProject())">Update</button>
+        <button onclick="call('DELETE', '/api/mongo/projects/' + val('mProjectId'))">Delete</button>
+      </fieldset>
+      <fieldset>
+        <legend>Embedded task</legend>
+        <input id="mTaskId" placeholder="task _id (for update, delete)">
+        <input id="mTitle" placeholder="title" maxlength="200">
+        <select id="mStatus"><option>todo</option><option>doing</option><option>done</option></select>
+        <button onclick="call('POST', mTaskUrl(false), mTask())">Add ($push)</button>
+        <button onclick="call('PUT', mTaskUrl(true), mTask())">Update (tasks.$)</button>
+        <button onclick="call('DELETE', mTaskUrl(true))">Remove ($pull)</button>
+      </fieldset>
+    </section>
+  </div>
+
+  <h2>Result</h2>
+  <pre id="out">Click a button.</pre>
+
+  <script>
+    function val(id) { return document.getElementById(id).value.trim(); }
+    function sqlProject() { return { name: val('sqlName'), description: val('sqlDesc') }; }
+    function sqlTask() { return { project_id: val('sqlTaskProject'), title: val('sqlTitle'), status: val('sqlStatus') }; }
+    function mProject() { return { name: val('mName'), description: val('mDesc') }; }
+    function mTask() { return { title: val('mTitle'), status: val('mStatus') }; }
+    function mTaskUrl(withTask) {
+      const url = '/api/mongo/projects/' + val('mProjectId') + '/tasks';
+      return withTask ? url + '/' + val('mTaskId') : url;
+    }
+
+    async function call(method, url, body) {
+      const options = { method, headers: { 'Content-Type': 'application/json' } };
+      if (body) options.body = JSON.stringify(body);
+      const res = await fetch(url, options);
+      const data = await res.json();
+      document.getElementById('out').textContent =
+        method + ' ' + url + '\n' + res.status + ' ' + res.statusText + '\n\n' + JSON.stringify(data, null, 2);
+    }
+  </script>
+</body>
+</html>
